@@ -32,6 +32,14 @@
 #
 ##############################################################################
 class OutputFile
+  # This regex must:
+  # - detect the start-line of your stanza (usually Title or DbVar)
+  # - capture a stanza label or name or title (suitable for translation
+  #   into a filename) between the second set of round brackets
+
+# STANZA_START_REGEX = /^(Title|T)\s+(.*)\s*$/i	# CUSTOMISE
+  STANZA_START_REGEX = /^(DbVar\d)\s+(.*)\s*$/i	# CUSTOMISE
+
   TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
   PREFIX_LINES = [
@@ -80,15 +88,16 @@ end
 # Main
 ##############################################################################
 have_warned_initial_content = false
+start_regex = OutputFile::STANZA_START_REGEX
 file_out = OutputFile.new
 while gets
   line = $_.chomp.strip
 
-  if line.match(/^DbVar\d\s+(.*)\s*$/i)
-    file_out.open_new_close_old($1)
+  if line.match(start_regex)
+    file_out.open_new_close_old($2)
 
   elsif !have_warned_initial_content && file_out.fname.nil? && !line.empty?
-    STDERR.puts "WARNING: Unexpected content before first DbVar line"
+    STDERR.puts "WARNING: Unexpected content before first #{start_regex.inspect} line"
     have_warned_initial_content = true
   end
 
