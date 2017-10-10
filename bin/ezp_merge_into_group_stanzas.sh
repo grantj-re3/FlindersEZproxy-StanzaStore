@@ -62,13 +62,14 @@ create_group_file() {
   echo "Merging stanza-files (matching '$match') into $fpath_out"
 
   echo						> "$fpath_out"
-  for fname_stanza in *.stz; do
-    if egrep -iq "$prefix_re($match|.* $match)" "$fname_stanza"; then
+  for fpath_stanza in "$src_dir"/*.stz; do
+    if egrep -iq "$prefix_re($match|.* $match)" "$fpath_stanza"; then
+      fname_stanza=`basename "$fpath_stanza"`
       echo "  $fname_stanza"
 
       show_pre_directives			>> "$fpath_out"
       echo "# From stanza-file: $fname_stanza"	>> "$fpath_out"
-      cat "$fname_stanza"			>> "$fpath_out"
+      cat "$fpath_stanza"			>> "$fpath_out"
       echo					>> "$fpath_out"
     fi
   done
@@ -94,8 +95,6 @@ verify_params() {
 # Main
 ##############################################################################
 verify_params
-cd "$src_dir"
-
 if [ $# = 2 ]; then
   # Invoked with 2 args (MATCH & OUT_FILE_PATH)
   create_group_file "$1" "$2"
