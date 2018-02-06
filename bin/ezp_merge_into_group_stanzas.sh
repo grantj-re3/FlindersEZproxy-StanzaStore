@@ -61,18 +61,21 @@ create_group_file() {
   echo
   echo "Merging stanza-files (matching '$match') into $fpath_out"
 
-  echo						> "$fpath_out"
-  for fpath_stanza in "$src_dir"/*.stz; do
-    if egrep -iq "$prefix_re($match|.* $match)" "$fpath_stanza"; then
-      fname_stanza=`basename "$fpath_stanza"`
-      echo "  $fname_stanza"
-
-      show_pre_directives			>> "$fpath_out"
-      echo "# From stanza-file: $fname_stanza"	>> "$fpath_out"
-      cat "$fpath_stanza"			>> "$fpath_out"
-      echo					>> "$fpath_out"
-    fi
-  done
+  echo							> "$fpath_out"
+  ls -1 "$src_dir"/*.stz |
+    sed 's/\.stz$//' |
+    LANG=C sort -f |
+    sed 's/$/.stz/' |
+    while read fpath_stanza; do
+      if egrep -iq "$prefix_re($match|.* $match)" "$fpath_stanza"; then
+        fname_stanza=`basename "$fpath_stanza"`
+        echo "  $fname_stanza"
+        show_pre_directives				>> "$fpath_out"
+        echo "# From stanza-file: $fname_stanza"	>> "$fpath_out"
+        cat "$fpath_stanza"				>> "$fpath_out"
+        echo						>> "$fpath_out"
+      fi
+    done
 }
 
 ##############################################################################
