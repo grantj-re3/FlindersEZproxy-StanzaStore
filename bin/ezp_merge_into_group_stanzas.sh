@@ -13,6 +13,18 @@
 # specified MATCH argument.
 #
 ##############################################################################
+app_dir_tmp=`dirname "$0"`	# Might be relative (eg "." or "..") or absolute
+top_dir=`cd "$app_dir_tmp/.." ; pwd`	# Absolute path of parent dir of app dir
+
+# Assumes these dirs already exist
+src_dir="$top_dir/stanzas.d"	# CUSTOMISE: Source folder containing 1 file per stanza
+dst_dir="$top_dir/conf.d"	# CUSTOMISE: Destination folder for config below
+tmp_dir="$top_dir/working"
+fname_stanzas="$tmp_dir/stanaz_files.psv"
+fname_stanzas_sorted="$tmp_dir/stanaz_files_sorted.psv"
+
+delim="|"			# Single char delimiter for sort command
+
 # Format of comment lines which match EZproxy groups are:
 # - upper or lower or mixed case
 # - only first 2 letters are considered for matching
@@ -31,9 +43,6 @@ prefix_re="^# *@groups:"
 pre_directives="
 	Option HttpsHyphens
 "
-
-src_dir="$HOME/myEzproxy/stanzas.d"	# CUSTOMISE: Source folder containing 1 file per stanza
-dst_dir="$HOME/myEzproxy/conf.d"	# CUSTOMISE: Destination folder for config below
 
 # CUSTOMISE
 config="
@@ -55,27 +64,48 @@ show_pre_directives() {
 }
 
 ##############################################################################
+get_sorted_file_list() {
+  # Write unsorted PSV (Pipe-Separated Values) file:
+  #
+  # Assumes every stanza file has a DbVar0 line.
+  # Field 1: The sort-key ie. the text on the DbVar0 line.
+  # Field 2: The filename associated with the above DbVar0 line.
+  for fpath_stanza in "$src_dir"/*.stz; do
+    key=`egrep "^DbVar0" "$fpath_stanza" |head -1`
+    echo "$key$delim$fpath_stanza";
+  done > "$fname_stanzas"
+
+  # Write sorted PSV (Pipe-Separated Values) file:
+  #
+  # Sort records the same as FileMaker (for compatibility with previous system).
+  # "LANG=C" sets the collation sequence; in particular will compare column N
+  #   with column N (eg. N=3) even if column N contains a space or symbol
+  #   character.
+  # "sort -f" ignores case when performing comparisons.
+  LANG=C sort -f -t"$delim" -k1,1 "$fname_stanzas" > "$fname_stanzas_sorted"
+
+  # Send the sorted filenames to stdout
+  sed "s/^.*$delim//" "$fname_stanzas_sorted"
+}
+
+##############################################################################
 create_group_file() {
   match="$1"
   fpath_out="$2"
   echo
   echo "Merging stanza-files (matching '$match') into $fpath_out"
 
-  echo							> "$fpath_out"
-  ls -1 "$src_dir"/*.stz |
-    sed 's/\.stz$//' |
-    LANG=C sort -f |
-    sed 's/$/.stz/' |
-    while read fpath_stanza; do
-      if egrep -iq "$prefix_re($match|.* $match)" "$fpath_stanza"; then
-        fname_stanza=`basename "$fpath_stanza"`
-        echo "  $fname_stanza"
-        show_pre_directives				>> "$fpath_out"
-        echo "# From stanza-file: $fname_stanza"	>> "$fpath_out"
-        cat "$fpath_stanza"				>> "$fpath_out"
-        echo						>> "$fpath_out"
-      fi
-    done
+  echo						> "$fpath_out"
+  get_sorted_file_list |while read fpath_stanza; do
+    if egrep -iq "$prefix_re($match|.* $match)" "$fpath_stanza"; then
+      fname_stanza=`basename "$fpath_stanza"`
+
+      show_pre_directives			>> "$fpath_out"
+      echo "# From stanza-file: $fname_stanza"	>> "$fpath_out"
+      cat "$fpath_stanza"			>> "$fpath_out"
+      echo					>> "$fpath_out"
+    fi
+  done
 }
 
 ##############################################################################
