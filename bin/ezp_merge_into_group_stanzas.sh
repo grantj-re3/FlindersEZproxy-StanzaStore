@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright (c) 2017, Flinders University, South Australia. All rights reserved.
+# Copyright (c) 2017-2018, Flinders University, South Australia. All rights reserved.
 # Contributors: Library, Corporate Services, Flinders University.
 # See the accompanying LICENSE file (or http://opensource.org/licenses/BSD-3-Clause).
 #
@@ -110,10 +110,24 @@ create_group_file() {
 
 ##############################################################################
 verify_params() {
-  if [ ! -d "$src_dir" ]; then
-    echo "Source directory not found: '$src_dir'"
-    exit 1
-  fi
+  dirs_config="
+	##DirName	DirDescription
+	$src_dir	Source
+	$tmp_dir	Temporary-working
+"
+
+  echo "$dirs_config" |
+    while read dir desc; do
+      [ -z "$dir" -o -z "$desc" ] && continue		# Skip blank/invalid lines
+      ( echo "$dir" |egrep -q "^#" ) && continue	# Skip comments (where 1st non-space char is "#")
+
+      if [ ! -d "$dir" ]; then
+        echo "$desc directory not found: '$dir'"
+        exit 1
+      fi
+    done
+  res=$?
+  [ $res != 0 ] && exit $res
 
   if [ $# != 2 ]; then
     # Destination folder not used if invoked with 2 args
