@@ -54,6 +54,11 @@ config="
 	al	$dst_dir/gAlumni.txt
 "
 
+# CUSTOMISE
+CAT_RAW="cat"					# Copy stdin to stdout
+CAT_CLEAN="perl -pe 's/[^[:ascii:]]//g'"	# Ditto, but strip non-ascii chars
+CAT="$CAT_CLEAN"				# Set to CAT_RAW or CAT_CLEAN
+
 ##############################################################################
 show_pre_directives() {
   echo "$pre_directives" |
@@ -73,7 +78,7 @@ get_sorted_file_list() {
   for fpath_stanza in "$src_dir"/*.stz; do
     key=`egrep "^DbVar0" "$fpath_stanza" |head -1`
     echo "$key$delim$fpath_stanza";
-  done > "$fname_stanzas"
+  done |eval $CAT > "$fname_stanzas"
 
   # Write sorted PSV (Pipe-Separated Values) file:
   #
@@ -102,7 +107,7 @@ create_group_file() {
 
       show_pre_directives			>> "$fpath_out"
       echo "# From stanza-file: $fname_stanza"	>> "$fpath_out"
-      cat "$fpath_stanza"			>> "$fpath_out"
+      eval "$CAT \"$fpath_stanza\""		>> "$fpath_out"
       echo					>> "$fpath_out"
     fi
   done
