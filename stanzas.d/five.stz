@@ -1,4 +1,10 @@
 #@groups: alum atl
+#
+# The acceptable date format for @triallastday is anything permitted by
+# GNU "date -d ..." command. Valid date formats include:
+# - 2018-08-01, 2018-8-1, 2018-8-01, 2018-08-1
+# - 01 AUG 2018, 1 august 2018, 1 Aug 2018, 01 August 2018
+# - aug 1 2018, AUGUST 01 2018, Aug 01 2018, August 1 2018
 # @triallastday: 2028-06-01
 DbVar0 trial and error.         [Sequence 5]
 This is five.stz
