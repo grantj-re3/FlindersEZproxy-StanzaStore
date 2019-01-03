@@ -40,6 +40,7 @@ delim="|"			# Single char delimiter for sort command
 re_delim=":"
 re_groups="^# *@groups$re_delim"
 re_trial_last_day="^# *@triallastday$re_delim"
+re_remark="^# *@rem$re_delim"	# A remark/comment to be excluded from the merged file
 
 # Directives which appear before every stanza (one per line)
 pre_directives="
@@ -60,6 +61,14 @@ config="
 CAT_RAW="cat"					# Copy stdin to stdout
 CAT_CLEAN="perl -pe 's/[^[:ascii:]]//g'"	# Ditto, but strip non-ascii chars
 CAT="$CAT_CLEAN"				# Set to CAT_RAW or CAT_CLEAN
+
+# Stanza start mark: Issue warning if not present.
+# Although not strictly essential, we use this DbVar directive to mark
+# the start of a stanza for the purposes of splitting an EZproxy
+# merged/monolithic stanza file. (We previously used it in
+# LogFormat/LogSPU directives.)
+stanza_start_mark="DbVar0"
+re_stanza_start_mark="^$stanza_start_mark[\s].*[\w]"
 
 # Define true and false for bash/sh
 TRUE=1
@@ -144,8 +153,13 @@ create_group_file() {
 
         show_pre_directives				>> "$fpath_out"
         echo "# From stanza-file: $fname_stanza"	>> "$fpath_out"
-        eval "$CAT \"$fpath_stanza\""			>> "$fpath_out"
+        eval "$CAT \"$fpath_stanza\"" |
+          egrep -iv "$re_remark"			>> "$fpath_out"
         echo						>> "$fpath_out"
+
+        if ! eval "$CAT \"$fpath_stanza\"" |grep -P -iq "$re_stanza_start_mark"; then
+          echo "WARNING: Stanza in $fname_stanza does not contain a valid '$stanza_start_mark' line." >&2
+        fi
       fi
     fi
   done

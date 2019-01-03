@@ -1,4 +1,7 @@
 #@groups: fmc ATL
+# @rem: Two men landed on the moon in the Apollo 11
+# @rem:lunar module on 20 July 1969. The name of the
+#@rem: lunar module was Eagle.
 DbVar0 man on the moon.         [Sequence 2]
 This is two.stz
 
