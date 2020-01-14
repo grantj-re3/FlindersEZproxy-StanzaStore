@@ -59,7 +59,9 @@ Each of the above aggregated files within conf.d contains a list of (perhaps hun
 
 In our example, each stanza file starts with a DbVar0 directive which gives the generic stanza name/label. The label is typically free of specific information about stanza version or date (which is more likely to appear in the EZproxy stanza Title directive). The label typically consists of a limited range of characters suitable for filenames (eg. upper and lower case alphabetic characters, numbers, dot, space, hyphen, underscore; probably ampersand, colon round brackets and several other characters are also acceptable).
 
-It is strongly recommended that the name of the stanza file is identical to the label which follows the DbVar0 directive (plus the addition of the file extension ".stz"). For example, for the fictitious vendor "Future Fizicks" you would have filename "Future Fizicks.stz" and DbVar0 line "DbVar0 Future Fizicks". 
+It is strongly recommended that the name of the individual stanza file is identical to the label which follows the DbVar0 directive (plus the addition of the file extension ".stz"). For example, for the fictitious vendor "Future Fizicks" you would have filename "Future Fizicks.stz" and DbVar0 line "DbVar0 Future Fizicks". 
+
+Please note that the ezp_merge_into_group_stanzas.sh program sorts individual stanza files by filename. Hence if you change the stanza file filename (eg. from "BookList.stz" to "The BookList.stz") you will change the stanza position within the aggregated file. This can potentially affect how position dependent EZproxy directives (such as "Option X-Forwarded-For") interact with your stanza.
 
 It is also likely that the EZproxy Title directive is the same or similar. Eg.
 
@@ -72,7 +74,7 @@ Title Future Fizicks (version 1)
 
 ## Instructions for the ezp_merge_into_group_stanzas.sh program
 
-The format of the stanza files allows for ezp_merge_into_group_stanzas.sh instructions to be entered on EZproxy comment lines. (A line beginning with a "#" character is an EZproxy comment.) The ezp_merge_into_group_stanzas.sh program understands the following instructions.
+The format of the individual stanza files allows for ezp_merge_into_group_stanzas.sh instructions to be entered on EZproxy comment lines. (A line beginning with a "#" character is an EZproxy comment.) The ezp_merge_into_group_stanzas.sh program understands the following instructions.
 - @groups - one per (active) individual stanza file
 - @rem - zero or more per individual stanza file
 - @triallastday - zero or one per individual stanza file
@@ -91,7 +93,7 @@ To reiterate, EZproxy will ignore these lines because they are EZproxy comments.
 
 ### The @groups instruction
 
-The @groups line must appear once in every (active) stanza file. If it is omitted the individual stanza file content will not appear in any of the aggregated/group files (hence the stanza file will be inactive). The purpose of the instruction is to tell the ezp_merge_into_group_stanzas.sh program to add this individual stanza file to the specified list of aggregated (ie. group) files. The list of groups can appear in any order or in upper or lower case characters. The groups must be separated by one or more spaces.
+The @groups line must appear once in every (active) individual stanza file. If it is omitted the individual stanza file content will not appear in any of the aggregated/group files (hence the stanza file will be inactive). The purpose of the instruction is to tell the ezp_merge_into_group_stanzas.sh program to add this individual stanza file to the specified list of aggregated (ie. group) files. The list of groups can appear in any order or in upper or lower case characters. The groups must be separated by one or more spaces.
 
 For the ezp_merge_into_group_stanzas.sh environment given at the top of this page, only the first 2 characters of each group is recognised. Hence the strings alumni, alumn, alum, alu, al, ALUMNI, ALUMN, ALUM, ALU, AL, alWrong, ALjunk, alpine, algebra and alexander will all be associated with the "Alumni" group and the "gAlumni.txt" aggregate file. Hence, if any one of the following @groups instructions appears within an individual stanza file, the content of that file will be added to gAlumni.txt and gATL.txt and the content of that file will *not* appear in gFlinders.txt and gFMC.txt.
 
@@ -106,7 +108,7 @@ For the ezp_merge_into_group_stanzas.sh environment given at the top of this pag
 
 ### How to make a stanza inactive
 
-You can make an individual stanza inactive by doing something which results in that file being omitted from all aggregated files. Some suggestions are:
+You can make a stanza (within an individual stanza file) inactive by doing something which results in that file being omitted from all aggregated files. Some suggestions are:
 
 - Delete the stanza file. Not advisable if you believe you may use the stanza again and the stanza is not available elsewhere.
 - Move the stanza file to a different directory (so it is not in the stanza.d directory and therefore not processed).
@@ -127,7 +129,7 @@ The @rem instruction is a remark line or comment line which you can enter into a
 
 ### The @triallastday instruction
 
-The @triallastday instruction allows one to specify a date after which the stanza will no longer be included in any aggregated stanza file. This instruction can appear zero or one time within an individual stanza file. The purpose is to allow a stanza to be included in the aggregated file until the specified/trial date, after which whenever the ezp_merge_into_group_stanzas.sh program is run the content of the individual stanza file will be omitted.
+The @triallastday instruction allows one to specify a date after which the stanza will no longer be included in any aggregated stanza file. This instruction can appear zero or one time within an individual stanza file. The purpose is to allow a stanza to be included in the aggregated file until the specified/trial end-date. Whenever the ezp_merge_into_group_stanzas.sh program is run after this date, the content of the individual stanza file will be omitted.
 
 The date format which follows the "@triallastday" text can be any format permitted by the Linux/Unix date command. For the date command which comes with GNU coreutils 8.4, this includes:
 - 2018-08-01, 2018-8-1, 2018-8-01, 2018-08-1
@@ -164,4 +166,5 @@ Domain sciencedb.com
 - https://help.oclc.org/Library_Management/EZproxy/EZproxy_configuration/Introduction_to_database_stanza_directives
 - https://help.oclc.org/Library_Management/EZproxy/Configure_resources
 - https://help.oclc.org/Library_Management/EZproxy/Database_stanzas
+- https://help.oclc.org/Library_Management/EZproxy/Configure_resources/Option_X_Forwarded_For
 
