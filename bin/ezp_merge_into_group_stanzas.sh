@@ -20,8 +20,8 @@ top_dir=`cd "$app_dir_tmp/.." ; pwd`	# Absolute path of parent dir of app dir
 src_dir="$top_dir/stanzas.d"	# CUSTOMISE: Source folder containing 1 file per stanza
 dst_dir="$top_dir/conf.d"	# CUSTOMISE: Destination folder for config below
 tmp_dir="$top_dir/working"
-fname_stanzas="$tmp_dir/stanaz_files.psv"
-fname_stanzas_sorted="$tmp_dir/stanaz_files_sorted.psv"
+fname_stanzas="$tmp_dir/stanza_files.psv"
+fname_stanzas_sorted="$tmp_dir/stanza_files_sorted.psv"
 
 delim="|"			# Single char delimiter for sort command
 
@@ -103,6 +103,9 @@ get_sorted_file_list() {
   #   character.
   # "sort -f" ignores case when performing comparisons.
   LANG=C sort -f -t"$delim" -k1,1 "$fname_stanzas" > "$fname_stanzas_sorted"
+
+  # Assumes dir is set-GID and multiple users (in the same set-GID group) run this script
+  sudo chmod g+w "$fname_stanzas"  "$fname_stanzas_sorted"
 
   # Send the sorted filenames to stdout
   sed "s/^.*$delim//" "$fname_stanzas_sorted"
