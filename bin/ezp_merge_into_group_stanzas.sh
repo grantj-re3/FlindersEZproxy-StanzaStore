@@ -199,9 +199,31 @@ verify_params() {
 }
 
 ##############################################################################
+warn_if_no_group() {
+  get_sorted_file_list |while read fpath_stanza; do
+    fname_stanza=`basename "$fpath_stanza"`
+    found=0			# Assume no valid group found in @groups
+
+    while read match fpath_out; do
+      [ -z "$match" -o -z "$fpath_out" ] && continue	# Skip blank/invalid lines
+      ( echo "$match" |egrep -q "^#" ) && continue	# Skip comments (where 1st non-space char is "#")
+
+      # Identical to match performed in create_group_file()
+      if egrep -iq "$re_groups($match|.* $match)" "$fpath_stanza"; then
+        found=1			# Found a valid group
+      fi
+    done <<< "$config"
+
+    [ $found = 0 ] && echo "WARNING: Stanza file '$fname_stanza' does not contain a line matching the regex /$re_groups LIST_OF_GROUPS/." >&2
+  done
+}
+
+##############################################################################
 # Main
 ##############################################################################
 verify_params
+warn_if_no_group
+
 if [ $# = 2 ]; then
   # Invoked with 2 args (MATCH & OUT_FILE_PATH)
   create_group_file "$1" "$2"
